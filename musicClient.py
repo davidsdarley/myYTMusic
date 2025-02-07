@@ -25,9 +25,7 @@ Client Goals:
 
 import requests
 import vlc
-import time
-import yt_dlp
-import os
+import keyboard
 
 SERVER_URL = "http://127.0.0.1:5000"
 
@@ -51,17 +49,24 @@ def playAudio(url):
     boombox = vlc.MediaPlayer(url)  # make an audioplayer object
     boombox.play()                  # start the tunes
     state = boombox.get_state()
+    def skip():
+        boombox.stop()
+        # sends request to server for new song
     print()
     while state not in [vlc.State.Ended, vlc.State.Stopped]:
+        keyboard.on_release_key("right", skip)
         state = boombox.get_state()
 
+
+
+
 def controls():
+    #skip
     pass
 
 
 def main():
-    running = True
-    while running == True:
+    while True:
         songinfo = getNextSong()
         if not songinfo:
             print("No more songs")

@@ -55,6 +55,7 @@ Implementation:
 from flask import Flask, jsonify, request
 import yt_dlp
 
+
 app = Flask(__name__)
 
 musicLibrary = {
@@ -63,7 +64,7 @@ musicLibrary = {
 }
 
 playlist = {
-    "songs": ["Soldier and Thief", "Never the Hero"],
+    "songs": ["Never the Hero", "Soldier and Thief"],
     "currentIndex": 0
 }
 
@@ -79,6 +80,8 @@ def nextSong():
         song = playlist["songs"][index]
         url = getSongUrl(name = song)
         playlist["currentIndex"] +=1
+        index = playlist["currentIndex"]
+        print(f'Sending "{song}" now!')
         return jsonify([song, url]), 200
     else:
         return jsonify({"message": "No more songs"}), 404
@@ -102,4 +105,4 @@ def getSongUrl(index = None, name = None):
         return file["url"]
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
