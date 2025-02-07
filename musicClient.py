@@ -21,90 +21,110 @@ Client Goals:
 
     3. Keep minimal amount of data here
         - Current song
+
+
+
+CODE FROM GAMES THAT MIGHT BE HELPFUL
+
+pygame.display.set_mode((1296, 750))
+
+
+running = True
+    while running == True:
+        screen.fill((0, 0, 0))
+        mouseUp = (None, None)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: #close the game when X is clicked
+                running = False
+            if event.type == pygame.MOUSEBUTTONUP: #click, return mouse position
+                mouseUp = pygame.mouse.get_pos()
+                game.click(mouseUp)
 '''
 
 import requests
 import vlc
-from pynput import keyboard
-import threading
+import pygame
 
-SERVER_URL = "http://127.0.0.1:5000"
-BOOMBOX = None
-STATE = True
+class MusicApp:
+
+    def __init__(self, url = "http://127.0.0.1:5000"):
+        self.SERVER_URL = url
+        self.boombox = None
+        self.state = True
 
 
-def press(key):
-    pass
-def release(key):
-    global STATE
-    """Called when a key is released"""
-    if key == keyboard.Key.right:
-        # If the right arrow key is released, call the skip function
-        STATE = skip()
-def skip():
-    global BOOMBOX
-    if BOOMBOX != None:
-        BOOMBOX.stop()
-        BOOMBOX = None
-        print("Skipped!")
-        return False
-    return True
+    def press(self, key):
+        pass
+    def release(self, key):
+        """Called when a key is released"""
+        if key == "rarrow":
+            # If the right arrow key is released, call the skip function
+            self.state = self.skip()
+        elif key == "larrow":
+            pass
+    def skip(self):
+        global BOOMBOX
+        if self.boombox != None:
+            self.boombox.stop()
+            BOOMBOX = None
+            print("Skipped!")
+            return False
+        return True
 
-def controls():
-    """Listen for keyboard events in a separate thread"""
-    with keyboard.Listener(on_press = press, on_release = release) as listener:
-        listener.join()
-
-# Start the listener in a separate thread
-keyboardControls = threading.Thread(target = controls)
-keyboardControls.daemon = True  # Makes the thread exit when the main program exits. VERY IMPORTANT
-keyboardControls.start()
-def getPlaylist():
-    response = requests.get("http://127.0.0.1:5000/playlist")
-    if response.status_code == 200:
-        playlist = response.json()
-        print(playlist)
-    else:
-        print(f"Error: {response.status_code}")
-
-def getNextSong():
-    response = requests.get("http://127.0.0.1:5000/next")
-    if response.status_code == 200:
-        song = response.json()
-        return song
-
-def playAudio(url):
-    global BOOMBOX, STATE
-    print(url)
-    #download the audio, then play it
-    BOOMBOX = vlc.MediaPlayer(url)  # make an audioplayer object
-    BOOMBOX.play()                  # start the tunes
-    while True:
-        if BOOMBOX.get_state() in [vlc.State.Ended, vlc.State.Stopped]:
-            return
-        elif STATE == False:
-            return
+    def controls(self):
+        pass
+        #call the appropriate method for the appropriate event
 
 
 
-def controls():
-    #skip
-    pass
 
 
-def main():
-    global STATE
-    while True:
-        STATE = True
-        songinfo = getNextSong()
-        if not songinfo:
-            print("No more songs")
-            break
-        print(songinfo[0])
-        playAudio(songinfo[1])
-        print("DEBUG")
+    def getPlaylist(self):
+        response = requests.get("http://127.0.0.1:5000/playlist")
+        if response.status_code == 200:
+            playlist = response.json()
+            print(playlist)
+        else:
+            print(f"Error: {response.status_code}")
+
+    def getNextSong(self):
+        response = requests.get("http://127.0.0.1:5000/next")
+        if response.status_code == 200:
+            song = response.json()
+            return song
+
+    def playAudio(self, url):
+        print(url)
+        #download the audio, then play it
+        self.boombox = vlc.MediaPlayer(url)  # make an audioplayer object
+        self.boombox.play()                  # start the tunes
+        while (self.boombox.get_state() not in [vlc.State.Ended, vlc.State.Stopped]) and self.state:
+
+
+
+
+    def controls(self):
+        #skip
+        pass
+
+
+    def main(self):
+        while True:
+            self.state = True
+            songinfo = self.getNextSong()
+            if not songinfo:
+                print("No more songs")
+                break
+            print(songinfo[0])
+            self.playAudio(songinfo[1])
+            print("DEBUG")
 
 
 if __name__ == '__main__':
-    main()
+    app = MusicApp()
+    app.main()
+
+
+
+
     pass

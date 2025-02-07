@@ -60,11 +60,13 @@ app = Flask(__name__)
 
 musicLibrary = {
     "Never the Hero": "https://www.youtube.com/watch?v=8WSZRUEi7Eo&list=PLP-hm-yIkc9k9C2VLviglOYIH_MvGxmBU",
-    "Soldier and Thief": "https://www.youtube.com/watch?v=_Gn9EsU_-eg"
+    "Soldier and Thief": "https://www.youtube.com/watch?v=_Gn9EsU_-eg",
+    "Grace in the Glow": "https://www.youtube.com/watch?v=22l1xIrq4Do&list=PLP-hm-yIkc9k9C2VLviglOYIH_MvGxmBU&index=2",
+    "Don't Forget Your Past": "https://www.youtube.com/watch?v=cCG9vm0Rv8o&list=PLP-hm-yIkc9k9C2VLviglOYIH_MvGxmBU&index=3"
 }
 
 playlist = {
-    "songs": ["Never the Hero", "Soldier and Thief"],
+    "songs": ["Don't Forget Your Past", "Grace in the Glow","Never the Hero", "Soldier and Thief"],
     "currentIndex": 0
 }
 
