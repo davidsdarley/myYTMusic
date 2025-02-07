@@ -66,6 +66,7 @@ playlist = {
     "songs": ["Soldier and Thief", "Never the Hero"],
     "currentIndex": 0
 }
+
 print(playlist)
 @app.route("/playlist", methods = ["GET"])
 def getPlaylist():
