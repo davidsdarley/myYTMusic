@@ -63,10 +63,10 @@ def main():
     running = True
     while running == True:
         songinfo = getNextSong()
-        print(songinfo)
         if not songinfo:
             print("No more songs")
             break
+        print(songinfo[0])
         playAudio(songinfo[1])
 
 
