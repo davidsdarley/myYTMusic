@@ -26,7 +26,8 @@ Client Goals:
 import requests
 import vlc
 import time
-from pytube import YouTube
+import yt_dlp
+import os
 
 SERVER_URL = "http://127.0.0.1:5000"
 
@@ -39,25 +40,34 @@ def getPlaylist():
         print(f"Error: {response.status_code}")
 
 def getNextSong():
-    response = requests.get("http://127.0.0.1:5000/next")   #response holds a dictionary. The
+    response = requests.get("http://127.0.0.1:5000/next")
     if response.status_code == 200:
-        url = response.json()
-        return url
+        song = response.json()
+        return song
 
-
-def playAudio(filename):
+def playAudio(url):
+    print(url)
     #download the audio, then play it
+    boombox = vlc.MediaPlayer(url)  # make an audioplayer object
+    boombox.play()                  # start the tunes
+    state = boombox.get_state()
+    print()
+    while state not in [vlc.State.Ended, vlc.State.Stopped]:
+        state = boombox.get_state()
+
+def controls():
     pass
+
 
 def main():
     running = True
     while running == True:
-        songUrl = getNextSong()
-        if not songUrl:
+        songinfo = getNextSong()
+        print(songinfo)
+        if not songinfo:
             print("No more songs")
             break
-        print(songUrl)
-
+        playAudio(songinfo[1])
 
 
 if __name__ == '__main__':

@@ -53,6 +53,7 @@ Implementation:
 '''
 
 from flask import Flask, jsonify, request
+import yt_dlp
 
 app = Flask(__name__)
 
@@ -65,7 +66,7 @@ playlist = {
     "songs": ["Soldier and Thief", "Never the Hero"],
     "currentIndex": 0
 }
-
+print(playlist)
 @app.route("/playlist", methods = ["GET"])
 def getPlaylist():
     return jsonify(playlist), 200
@@ -73,22 +74,31 @@ def getPlaylist():
 @app.route("/next", methods = ["GET"])
 def nextSong():
     if len(playlist["songs"]) > playlist["currentIndex"]:
-        song = getSongUrl(playlist["currentIndex"])
+        index = playlist["currentIndex"]
+        song = playlist["songs"][index]
+        url = getSongUrl(name = song)
         playlist["currentIndex"] +=1
-        return jsonify({"song url": song}), 200
+        return jsonify([song, url]), 200
     else:
         return jsonify({"message": "No more songs"}), 404
 
 def getSongUrl(index = None, name = None):
-    #           dict of urls  access the playlist     at active index
     if index != None:
-        return musicLibrary[playlist["songs"][index]]
+        url =  musicLibrary[playlist["songs"][index]]
     elif name != None:
-        return musicLibrary[name]
+        url = musicLibrary[name]
     else:
         return "error"
+    ydl_opts = {
+        # I don't entirely understand what these are but the internet says that they are good default settings!
+        "format": "bestaudio/best",
+        "quiet": True,
+        "noplaylist": True
+    }
 
-
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        file = ydl.extract_info(url, download=False)  # don't download, just url
+        return file["url"]
 
 if __name__ == '__main__':
     app.run(debug=True)
