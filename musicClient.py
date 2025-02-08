@@ -156,16 +156,19 @@ class MusicApp:
 
         while self.running:
             screen.fill((0, 0, 0))
-            screen.blit(buttons, (0,0))                            #also for later
+            screen.blit(buttons, (0,0))
+            pygame.display.update()     #screen display stuff
+
             self.state = True
             songinfo = self.getNextSong()
             if not songinfo:
                 print("No more songs")
                 break
             print(songinfo[0])
+            pygame.display.update()
             self.playAudio(songinfo[1])
             app.clock.tick(10)
-            pygame.display.update()
+            app.clock.tick(10)
         if app.boombox != None:
             app.boombox.release()
 
