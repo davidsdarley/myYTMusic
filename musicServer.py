@@ -2,7 +2,7 @@
 '''
 OK, what are the goals of this project?
     1. Learn servers
-    2. make the server keep track of playlist information
+    2. make the server keep track of playqueue information
         - maintain list of songs to be played, and which index is the active one
         - Play the active song
             * ON THE CLIENT'S DEVICE specifically
@@ -47,7 +47,7 @@ Implementation:
         - see list
         - see available songs
 
-    Start by getting the playlist set up. library jsonify turns dictionaries into JSONs, so use them
+    Start by getting the playqueue set up. library jsonify turns dictionaries into JSONs, so use them
     as much as possible.
 
 '''
@@ -62,35 +62,68 @@ musicLibrary = {
     "Never the Hero": "https://www.youtube.com/watch?v=8WSZRUEi7Eo&list=PLP-hm-yIkc9k9C2VLviglOYIH_MvGxmBU",
     "Soldier and Thief": "https://www.youtube.com/watch?v=_Gn9EsU_-eg",
     "Grace in the Glow": "https://www.youtube.com/watch?v=22l1xIrq4Do&list=PLP-hm-yIkc9k9C2VLviglOYIH_MvGxmBU&index=2",
-    "Don't Forget Your Past": "https://www.youtube.com/watch?v=cCG9vm0Rv8o&list=PLP-hm-yIkc9k9C2VLviglOYIH_MvGxmBU&index=3"
+    "Don't Forget Your Past": "https://www.youtube.com/watch?v=cCG9vm0Rv8o&list=PLP-hm-yIkc9k9C2VLviglOYIH_MvGxmBU&index=3",
+    "Star Wars | EPIC SAMURAI VERSION" : "https://www.youtube.com/watch?v=V8XPbvDdIP0&list=PLP-hm-yIkc9mHXLhN7GxeEqvsh0OF_6Mr",
+    "The Clones Theme | EPIC SAMURAI VERSION" : "https://www.youtube.com/watch?v=4B9mgvv82C4&list=PLP-hm-yIkc9mHXLhN7GxeEqvsh0OF_6Mr&index=2",
+    "Rise to Victory" : "https://www.youtube.com/watch?v=GORfswQLHEE"
 }
 
-playlist = {
-    "songs": ["Don't Forget Your Past", "Grace in the Glow","Never the Hero", "Soldier and Thief"],
+playlists = {
+    "test" : ["Don't Forget Your Past", "Grace in the Glow","Never the Hero", "Soldier and Thief"],
+    "dnd" : [],
+    "Samuel Kim": ["Star Wars | EPIC SAMURAI VERSION", "The Clones Theme | EPIC SAMURAI VERSION"],
+    "Clamavi de Profundis" : ["Rise to Victory"]
+}
+
+
+playqueue = {
+    "songs": playlists["test"],
     "currentIndex": 0
 }
 
-print(playlist)
+print(playqueue)
 @app.route("/playlist", methods = ["GET"])
-def getPlaylist():
-    return jsonify(playlist), 200
+def getPlayqueue():
+    return jsonify(playqueue), 200
+
+@app.route("/allPlaylists", methods = ["GET"])
+def getPlaylists():
+    lsts = list(playlists.keys())
+    return jsonify(lsts), 200
+@app.route("/selectPlaylist", methods = ["POST"])
+def setPlaylist():
+    print("Changing playlist")
+    name = request.get_json()
+    print(f"to {name}!")
+    if name not in playlists.keys():
+        return jsonify({"error": "requested playlist does not exist"}), 404
+    playqueue["songs"] = playlists[name]
+    playqueue["currentIndex"] = 0
+    lsts = playqueue["songs"]
+    print(lsts)
+    return jsonify(lsts), 201
 
 @app.route("/next", methods = ["GET"])
 def nextSong():
-    if len(playlist["songs"]) > playlist["currentIndex"]:
-        index = playlist["currentIndex"]
-        song = playlist["songs"][index]
-        url = getSongUrl(name = song)
-        playlist["currentIndex"] +=1
-        index = playlist["currentIndex"]
-        print(f'Sending "{song}" now!')
-        return jsonify([song, url]), 200
-    else:
-        return jsonify({"message": "No more songs"}), 404
+    index = playqueue["currentIndex"]
+    song = playqueue["songs"][index]
+    url = getSongUrl(name = song)
+    playqueue["currentIndex"] += 1
+    if playqueue["currentIndex"] >= len(playqueue["songs"]):
+        playqueue["currentIndex"] = 0
+    print(f'Sending "{song}" now!')
+    return jsonify([song, url]), 200
+
+@app.route("/previous", methods = ["GET"])
+def previous():
+    print("Bring back index")
+    print(playqueue["currentIndex"])
+    playqueue["currentIndex"] -= 2
+    return jsonify({"message": "Replaying!"}), 200
 
 def getSongUrl(index = None, name = None):
     if index != None:
-        url =  musicLibrary[playlist["songs"][index]]
+        url =  musicLibrary[playqueue["songs"][index]]
     elif name != None:
         url = musicLibrary[name]
     else:

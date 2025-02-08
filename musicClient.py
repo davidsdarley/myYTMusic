@@ -44,40 +44,18 @@ running = True
 import requests
 import vlc
 import pygame
-
+pygame.init()
 class MusicApp:
 
     def __init__(self, url = "http://127.0.0.1:5000"):
         self.SERVER_URL = url
+        self.running = True
         self.boombox = None
         self.state = True
-
-
-    def press(self, key):
-        pass
-    def release(self, key):
-        """Called when a key is released"""
-        if key == "rarrow":
-            # If the right arrow key is released, call the skip function
-            self.state = self.skip()
-        elif key == "larrow":
-            pass
-    def skip(self):
-        global BOOMBOX
-        if self.boombox != None:
-            self.boombox.stop()
-            BOOMBOX = None
-            print("Skipped!")
-            return False
-        return True
-
-    def controls(self):
-        pass
-        #call the appropriate method for the appropriate event
-
-
-
-
+        self.paused = False
+        #pygame interface stuff
+        self.screen = pygame.display.set_mode((1296, 750))
+        self.clock = pygame.time.Clock()
 
     def getPlaylist(self):
         response = requests.get("http://127.0.0.1:5000/playlist")
@@ -93,23 +71,92 @@ class MusicApp:
             song = response.json()
             return song
 
+    def goBack(self):
+        response = requests.get("http://127.0.0.1:5000/previous")
+        if response.status_code == 200:
+            self.boombox.stop()
+            self.state = False
+    def setPlaylist(self):
+        response = requests.get("http://127.0.0.1:5000/allPlaylists")
+        if response.status_code == 200:
+            for playlist in response.json():
+                print(playlist)
+            choice = input("\nselection: ")
+            while True:
+                if choice in response.json():
+                    response = requests.post("http://127.0.0.1:5000/selectPlaylist", json = choice)
+                    if response.status_code == 201:
+                        self.skip(f"Playlist {choice}:\n{response.json()}")
+                        return
+                elif choice == "":
+                    return
+                else:
+                    choice = input("Invalid selection.\nselection: ")
+        else:
+            print("Didn't work")
+
+    def skip(self, message = "Skipped!"):
+        if self.boombox != None:
+            self.boombox.stop()
+            self.state = False
+            print(message)
+    def restart(self):
+        self.boombox.stop()
+        self.boombox.play()
+    def playPause(self):
+        if self.paused:
+            self.boombox.play()
+            print("resume")
+            self.paused = False
+        else:
+            self.boombox.pause()
+            print("pause")
+            self.paused = True
+
+    def controls(self):
+        for event in pygame.event.get():
+            if event == pygame.QUIT:  # close the game when X is clicked
+                self.running = False
+                self.boombox.stop()
+                self.state = False
+            elif event.type == pygame.KEYUP:        #right: skip    left: restart.  down: previous song     up: print playlist
+                if event.key == pygame.K_RIGHT:
+                    self.skip()
+                elif event.key == pygame.K_SPACE:
+                    self.playPause()
+                elif event.key == pygame.K_LEFT:
+                    self.restart()
+                elif event.key == pygame.K_DOWN:
+                    self.goBack()
+                elif event.key == pygame.K_UP:
+                    self.getPlaylist()
+                elif event.key == pygame.K_q:
+                    print("shutting down")
+                    self.state = False
+                    self.running = False
+                elif event.key == pygame.K_p:
+                    self.setPlaylist()
+                else:
+                    print(event.key)
+        return
+
     def playAudio(self, url):
         print(url)
         #download the audio, then play it
+        if self.boombox != None:
+            self.boombox.release()
         self.boombox = vlc.MediaPlayer(url)  # make an audioplayer object
         self.boombox.play()                  # start the tunes
-        while (self.boombox.get_state() not in [vlc.State.Ended, vlc.State.Stopped]) and self.state:
-
-
-
-
-    def controls(self):
-        #skip
-        pass
-
+        while (self.boombox.get_state() not in [vlc.State.Ended]) and self.state:
+            self.controls()
 
     def main(self):
-        while True:
+        screen = pygame.display.set_mode((250, 140))                  #for later
+        buttons = pygame.image.load("musicAppButtons.png")
+
+        while self.running:
+            screen.fill((0, 0, 0))
+            screen.blit(buttons, (0,0))                            #also for later
             self.state = True
             songinfo = self.getNextSong()
             if not songinfo:
@@ -117,7 +164,12 @@ class MusicApp:
                 break
             print(songinfo[0])
             self.playAudio(songinfo[1])
-            print("DEBUG")
+            app.clock.tick(10)
+            pygame.display.update()
+        if app.boombox != None:
+            app.boombox.release()
+
+
 
 
 if __name__ == '__main__':
